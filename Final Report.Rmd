@@ -1,0 +1,1640 @@
+---
+title:  "עמית בוחבוט, ניר מעיין, לי זוהר, תומר אמיר, יובל ברקו"
+author: "מנחה: דר' לנה דייצ'מן"
+date: "14-02-2023"
+output:
+ html_document:
+  df_print: paged
+  toc: true
+  toc_dir: rtl
+  toc_float: true
+  toc_depth: 4
+  theme: 'cerulean'
+ word_document: default
+
+---
+
+<div dir="rtl">
+
+\
+\
+\
+\
+
+# השפעת גיל הנהג וסוג כלי הרכב על כמות תאונות הדרכים בישראל
+
+## מבוא
+
+כידוע, בחברה מודרנית בת ימינו, אנו מבלים שעות רבות על הכביש. ובמציאות
+המצערת שאנו מרבים להתבשר בתאונות דרכים שקורות בתדירות גבוהה מאוד.\
+נתון סטטיסטי מדאיג מציג כי מספר ההרוגים מתאונות דרכים עולה על מספר הרוגי
+מלחמות ישראל ובשל כך יש לראות בתאונות הדרכים תופעה שיש לפעול על מנת למגר
+אותה.\
+\
+במסגרת פרויקט גמר קורס "מדעי נתונים", בחרנו לבחון את השפעת גילאי הנהגים
+וסוג כלי הרכב על כמות התאונות במדינת ישראל, במחוזות השונים. לשם כך,
+ביצענו הערכות וניתוחים סטטיסטים ברבדים השונים, לבחינת ההשפעות והקשרים
+הרלוונטיים שסייעו לנו על מנת לענות שאלת המחקר שהגדרנו. כמו כן, בפן
+הכלכלי ביצענו ניתוח עבור החזר השקעה של פרויקט ממוקד בתחום שיפור תשתיות
+בכביש, תוך שימוש במונחים כלכליים לערך חיי אדם.\
+\
+אוכלוסיית יעד: בעלי רישיון A,B,C,D במדינת ישראל.\
+סוגי כלי רכב: אופנוע, רכב פרטי, משאית, מונית אוטובוס\
+מדגם: ע"פ פארטו של מצבת כלי רכב\
+שנים: 2012-2021
+
+## שאלות והשערות המחקר
+
+## האם ישנה השפעה בין גיל וסוג כלי הרכב על תאונות הדרכים במדינת ישראל? 
+
+האם ישנה השפעה של כמות התאונות הממוצעת בכל סוג כלי רכב במרחבים הגאוגרפים
+השונים?\
+השערת המחקר: ישנה השפעה, ככל שיהיו יותר רכבים אשר ממוצע התאונות שלהם
+גבוה, כך גם מספר התאונות יגדל.\
+\
+האם קיים הבדל בכמות התאונות בסוגי הרכבים השונים בכל מרחב גיאוגרפי?\
+השערת המחקר: קיים הבדל בין סוגי הרכבים במחוזות השונים.\
+\
+אם כן, איזה כלי תחבורה בעל כמות תאונות נמוכה ביותר?\
+השערת המחקר:כלי התחבורה הציבוריים שעל הכביש (אוטובוס, מוניות) יהיו בעלי
+כמות התאונות הנמוכים ביותר.\
+\
+
+האם קיים קשר בין כמות התאונות בטווחי הגיל השונים?\
+השערת המחקר: כן, צעירים נוטים לעשות יותר תאונות.\
+\
+
+האם קיים הבדל בטווח הגילאים 17-24 לבין טווח הגילאים 25-44 בכמות המעורבים
+בתאונות ?\
+.השערת המחקר: כן, נשער כי 17-24 עושים יותר תאונות\
+\
+
+האם יש תלות בכמות התאונות בין השעות השונות? ואם כן, מהי השעה המסוכנת
+ביותר?\
+השערת המחקר: כן, נסיק כי בשעות העומס יהיה את כמות התאונות הגבוהה ביותר\
+\
+
+בפן הכלכלי נרצה לבחון שיפור תשתיות כבישים כאמצעי להפחתת תאונות דרכים
+לנגד כדאיות ההשקעה למשק על מנת להעריך את הערך הכלכלי של חיי אדם\
+ראשית, בחרנו להשתמש בעקרון פארטו להגדרת אוכלוסיית המדגם, כאמצעי לחסכון
+במשאבים. ע"פ עקרון זה, אוכלוסיית היעד למחקר הינה: ערים בהן מצבת הרכבים
+הגבוהה ביותר ביחס לסך מצבת כלי הרכב במדינת ישראל ומהווה במצטבר 80% ממצבת
+הרכבים נכון לשנת 2021.\
+\
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE,comment="",prompt=FALSE}
+library(tidyverse)
+library(rlang)
+library(reshape2)
+library(agricolae)
+library(FinCal)
+library(FinancialMath)
+library(rgl)
+library(plot3D)
+library(barplot3d)
+library(htmlwidgets)
+library(qcc)
+library(leaflet)
+library(treemapify)
+library(d3Tree)
+library(treemap)
+library(plotrix)
+library(plotly)
+library(GGally)
+library(readr)
+######################Primary data tables######################
+###############################################################
+
+#####Pareto table
+pareto<-read_csv("C:\\Users\\nmaayan\\OneDrive - Intel Corporation\\Desktop\\datascience\\project\\סופי גמור\\csv\\1.csv",locale = locale(date_names = "he", encoding = "UTF-8"))
+pareto<-rename(pareto,settlement='יישוב',year='שנה',motorcycle='אופנוע',taxi='מונית',bus='אוטובוס',truck='משאית סך הכל',car='רכב פרטי')
+pareto$car<-replace(pareto$car,pareto$car=="***",0)
+pareto$motorcycle<-replace(pareto$motorcycle,pareto$motorcycle=="***",0)
+pareto$taxi<-replace(pareto$taxi,pareto$taxi=="***",0)
+pareto$bus<-replace(pareto$bus,pareto$bus=="***",0)
+pareto$truck<-replace(pareto$truck,pareto$truck=="***",0)
+pareto2021<-pareto[pareto$year==2021,]
+pareto2021$sum<-as.numeric(pareto2021$car)+as.numeric(pareto2021$motorcycle)
+sum2021<-sum(pareto2021$sum)
+pareto2021$percent<-(pareto2021$sum/sum2021)*100
+pareto2021<-pareto2021[order(pareto2021$percent,decreasing=TRUE),]
+pareto2021$cumulative<-as.numeric(0)
+final_pareto2021<-pareto2021[0,]
+#r<-as.numeric()
+k<-0;i<-1
+while(k<=80)
+{
+ k<-k+(pareto2021[i,'percent'])
+ # r<-c(r,k)
+ pareto2021[i,'cumulative']<-k
+ final_pareto2021[i,]<-pareto2021[i,]
+ i<-i+1 
+}
+Table_7<-read_csv("C:\\Users\\nmaayan\\OneDrive - Intel Corporation\\Desktop\\datascience\\project\\סופי גמור\\csv\\7.csv",locale = locale(date_names = "he", encoding = "UTF-8"))
+Table_7<-rename(Table_7,settlement='יישוב',district='מחוז')
+final_pareto2021<-merge(x=final_pareto2021,y=Table_7,by.x='settlement',by.y ='settlement' )
+final_pareto2021<-final_pareto2021[c(1,11)]
+#####Table_1
+Table_1<-pareto
+Table_1<-Table_1[Table_1$year>2011,]
+Table_1<-merge(x=Table_1,y=final_pareto2021,by.x='settlement',by.y ='settlement' )
+#####Table_2
+Table_2<-read_csv("C:\\Users\\nmaayan\\OneDrive - Intel Corporation\\Desktop\\datascience\\project\\סופי גמור\\csv\\2.csv",locale = locale(date_names = "he", encoding = "UTF-8"))
+Table_2<-rename(Table_2,settlement='יישוב',year='שנה',easy='קל',hard='קשה',fatal='קטלנית')
+Table_2$easy<-replace(Table_2$easy,Table_2$easy=="***",0)
+Table_2$hard<-replace(Table_2$hard,Table_2$hard=="***",0)
+Table_2$fatal<-replace(Table_2$fatal,Table_2$fatal=="***",0)
+Table_2<-Table_2[Table_2$year>2011,]
+Table_2<-merge(x=Table_2,y=final_pareto2021,by.x='settlement',by.y ='settlement' )
+#####Table_3
+Table_3<-read_csv("C:\\Users\\nmaayan\\OneDrive - Intel Corporation\\Desktop\\datascience\\project\\סופי גמור\\csv\\3.csv",locale = locale(date_names = "he", encoding = "UTF-8"))
+p<-Table_3[-nrow(Table_3),]
+#####Table_4
+Table_4<-read_csv("C:\\Users\\nmaayan\\OneDrive - Intel Corporation\\Desktop\\datascience\\project\\סופי גמור\\csv\\4.csv",locale = locale(date_names = "he", encoding = "UTF-8"))
+Table_4<-rename(Table_4,settlement='יישוב',year='שנה',motorcycle='אופנוע',taxi='מונית',bus='אוטובוס',truck='משאית סך הכל',car='רכב פרטי')
+Table_4$car<-replace(Table_4$car,Table_4$car=="***",0)
+Table_4$motorcycle<-replace(Table_4$motorcycle,Table_4$motorcycle=="***",0)
+Table_4$taxi<-replace(Table_4$taxi,Table_4$taxi=="***",0)
+Table_4$bus<-replace(Table_4$bus,Table_4$bus=="***",0)
+Table_4$truck<-replace(Table_4$truck,Table_4$truck=="***",0)
+Table_4<-Table_4[Table_4$year>2011,]
+Table_4<-merge(x=Table_4,y=final_pareto2021,by.x='settlement',by.y ='settlement' )
+Table_4<-full_join(Table_4, Table_1, by = c("settlement", "year"))
+Table_4[is.na(Table_4)]=0
+Table_4$district.x<-replace(Table_4$district.x,Table_4$district.x==0 & Table_4$settlement=="ניר צבי","מחוז מרכז")
+Table_4$district.x<-replace(Table_4$district.x,Table_4$district.x==0 & Table_4$settlement=="חריש","מחוז חיפה")
+Table_4<-rename(Table_4,accident_motorcycle='motorcycle.x',accident_taxi='taxi.x',accident_bus='bus.x',accident_truck='truck.x',accident_car='car.x',count_motorcycle='motorcycle.y',count_taxi='taxi.y',count_bus='bus.y',count_truck='truck.y',count_car='car.y',district='district.x')
+Table_4<-Table_4[-14]
+Table_4$avg_motorcycle<-(as.numeric(Table_4$accident_motorcycle)/as.numeric(Table_4$count_motorcycle))*100
+Table_4$avg_car<-(as.numeric(Table_4$accident_car)/as.numeric(Table_4$count_car))*100
+Table_4$avg_bus<-(as.numeric(Table_4$accident_bus)/as.numeric(Table_4$count_bus))*100
+Table_4$avg_taxi<-(as.numeric(Table_4$accident_taxi)/as.numeric(Table_4$count_taxi))*100
+Table_4$avg_truck<-(as.numeric(Table_4$accident_truck)/as.numeric(Table_4$count_truck))*100
+Table_4[is.na(Table_4)]=0
+for (i in 14:18) {
+ Table_4[,i]<-replace(Table_4[,i],is.infinite(Table_4[,i]),0)
+}
+Table_4$sum<-as.numeric(Table_4$accident_motorcycle)+as.numeric(Table_4$accident_taxi)+as.numeric(Table_4$accident_bus)+as.numeric(Table_4$accident_truck)+as.numeric(Table_4$accident_car)
+#####Table_5
+Table_5<-read_csv("C:\\Users\\nmaayan\\OneDrive - Intel Corporation\\Desktop\\datascience\\project\\סופי גמור\\csv\\5.csv",locale = locale(date_names = "he", encoding = "UTF-8"))
+Table_5$`17 - 24`<-replace(Table_5$`17 - 24`,Table_5$`17 - 24`=="***",0)
+Table_5$`>=75`<-replace(Table_5$`>=75`,Table_5$`>=75`=="***",0)
+Table_5$`25 - 44`<-replace(Table_5$`25 - 44`,Table_5$`25 - 44`=="***",0)
+Table_5$`45 - 64`<-replace(Table_5$`45 - 64`,Table_5$`45 - 64`=="***",0)
+Table_5$`65 - 74`<-replace(Table_5$`65 - 74`,Table_5$`65 - 74`=="***",0)
+Table_5<-rename(Table_5,settlement='יישוב',year='שנה')
+Table_5<-Table_5[Table_5$year>2011,]
+Table_5<-merge(x=Table_5,y=final_pareto2021,by.x='settlement',by.y ='settlement' )
+Table_5$sum_age<-as.numeric(Table_5$`17 - 24`)+as.numeric(Table_5$`65 - 74`)+as.numeric(Table_5$`45 - 64`)+as.numeric(Table_5$`25 - 44`)+as.numeric(Table_5$`>=75`)
+Table_5$`17 - 24`<-(as.numeric(Table_5$`17 - 24`)/Table_5$sum)*100
+Table_5$`>=75`<-(as.numeric(Table_5$`>=75`)/Table_5$sum)*100
+Table_5$`25 - 44`<-(as.numeric(Table_5$`25 - 44`)/Table_5$sum)*100
+Table_5$`45 - 64`<-(as.numeric(Table_5$`45 - 64`)/Table_5$sum)*100
+Table_5$`65 - 74`<-(as.numeric(Table_5$`65 - 74`)/Table_5$sum)*100
+#####Table_6
+Table_6<-read_csv("C:\\Users\\nmaayan\\OneDrive - Intel Corporation\\Desktop\\datascience\\project\\סופי גמור\\csv\\6.csv",locale = locale(date_names = "he", encoding = "UTF-8"))
+Table_6<-rename(Table_6,year='שנת תאונה')
+#####Year tables
+Table_2012<-full_join(Table_4[Table_4$year=='2012',],Table_5[Table_5$year=='2012',],Table_2[Table_2$year=='2012',], by = c("settlement","year"))
+Table_2012<-Table_2012[-2]
+Table_2012[is.na(Table_2012)]=0
+Table_2013<-full_join(Table_4[Table_4$year=='2013',],Table_5[Table_5$year=='2013',],Table_2[Table_2$year=='2013',], by = c("settlement","year"))
+Table_2013<-Table_2013[-2]
+Table_2013[is.na(Table_2013)]=0
+Table_2014<-full_join(Table_4[Table_4$year=='2014',],Table_5[Table_5$year=='2014',],Table_2[Table_2$year=='2014',], by = c("settlement","year"))
+Table_2014<-Table_2014[-2]
+Table_2014[is.na(Table_2014)]=0
+Table_2015<-full_join(Table_4[Table_4$year=='2015',],Table_5[Table_5$year=='2015',],Table_2[Table_2$year=='2015',], by = c("settlement","year"))
+Table_2015<-Table_2015[-2]
+Table_2015[is.na(Table_2015)]=0
+Table_2016<-full_join(Table_4[Table_4$year=='2016',],Table_5[Table_5$year=='2016',],Table_2[Table_2$year=='2016',], by = c("settlement","year"))
+Table_2016<-Table_2016[-2]
+Table_2016[is.na(Table_2016)]=0
+Table_2017<-full_join(Table_4[Table_4$year=='2017',],Table_5[Table_5$year=='2017',],Table_2[Table_2$year=='2017',], by = c("settlement","year"))
+Table_2017<-Table_2017[-2]
+Table_2017[is.na(Table_2017)]=0
+Table_2018<-full_join(Table_4[Table_4$year=='2018',],Table_5[Table_5$year=='2018',],Table_2[Table_2$year=='2018',], by = c("settlement","year"))
+Table_2018<-Table_2018[-2]
+Table_2018[is.na(Table_2018)]=0
+Table_2019<-full_join(Table_4[Table_4$year=='2019',],Table_5[Table_5$year=='2019',],Table_2[Table_2$year=='2019',], by = c("settlement","year"))
+Table_2019<-Table_2019[-2]
+Table_2019[is.na(Table_2019)]=0
+Table_2020<-full_join(Table_4[Table_4$year=='2020',],Table_5[Table_5$year=='2020',],Table_2[Table_2$year=='2020',], by = c("settlement","year"))
+Table_2020<-Table_2020[-2]
+Table_2020[is.na(Table_2020)]=0
+Table_2021<-full_join(Table_4[Table_4$year=='2021',],Table_5[Table_5$year=='2021',],Table_2[Table_2$year=='2021',], by = c("settlement","year"))
+Table_2021<-Table_2021[-2]
+Table_2021[is.na(Table_2021)]=0
+
+
+```
+
+```{r,echo=FALSE,comment="",prompt=FALSE,warning=FALSE,fig.width=16,fig.height=7}
+#####Pareto chart:For all settlements
+p<-pareto2021
+data1<-p[c(-2:-7,-9)]
+data1<-filter(data1,cumulative>0)
+x<-sum(filter(p,cumulative==0)$sum)
+data1$sum<-as.numeric(data1$sum)
+data1$tot<-as.numeric(data1$sum)
+data1<-rbind(data1,c("יתר 1094 יישובים",0,100,x))
+data1$tot<-as.numeric(data1$tot)
+for (i in 2:nrow(data1)) {
+ data1$tot[i] <-data1$tot[i-1]+data1$tot[i]
+}
+data1$sum<-as.numeric(data1$sum)
+t<-max(data1$tot)
+data1$cumulative<-as.numeric(data1$cumulative)
+t2<-round(data1$cumulative,2)
+data1$sum<-as.numeric(data1$sum)
+ggplot(data1, aes(x = reorder(settlement,sum), y = sum,label=t2))+
+ geom_bar(stat="identity", color='skyblue',fill='steelblue')+
+ theme(axis.text.x=element_text(angle=45, hjust=1))+
+ geom_point(aes(y=tot),col="red")+
+ scale_y_continuous(breaks=seq(0, t, t/10), limits=c(0,t))+ 
+ annotate("text", x = 7, y = seq(0, t, t/10), label = c(" 0%", " 10%", " 20%", " 30%", " 40%", " 50%", " 60%", " 70%", " 80%", " 90%", "100%"), size = 5)+
+ geom_text(aes(x=data1$settlement,y=data1$tot),vjust=-1.5,size=1.5,col="red")+
+ geom_hline(yintercept = t*0.8,size=.1)+
+ ylab("כמות כלי רכב (מצרפי)")+xlab("יישובים")+
+ labs(title =" טבלת פארטו לפי מצבת כלי הרכב שנת 2021")+
+ theme(plot.title = element_text(hjust = 0.5))
+```
+
+בגרף זה ניתן לראות את 96 היישובים בהן מצבת כלי הרכב המצטבר מהווה 80%
+ממצבת הרכבים בארץ. משמאל, ישנם 1094 היישובים הנוספים המהווים 20% הנותרים
+ממצבת הרכבים, אשר נבחר שלא להתייחס אליהם במדגם זה.\
+\
+\
+בגרף הבא נרצה להציג את נתח מצבת כלי הרכב לפי מחוזות לפי שייכות היישובים
+המשתתפים במחקר.
+
+```{r,echo=FALSE,warning=FALSE,comment="",prompt=FALSE}
+
+#####Pareto pie:By regions-years 2017 to 2021
+p<-rbind(Table_2021[c(-1:-6,-13:-23)],Table_2020[c(-1:-6,-13:-23)],Table_2019[c(-1:-6,-13:-23)],Table_2018[c(-1:-6,-13:-23)],Table_2017[c(-1:-6,-13:-23)])
+p$count_motorcycle<-as.numeric(p$count_motorcycle)
+p$count_taxi<-as.numeric(p$count_taxi)
+p$count_bus<-as.numeric(p$count_bus)
+p$count_truck<-as.numeric(p$count_truck)
+p$count_car<-as.numeric(p$count_car)
+p$tot<-p$count_motorcycle+p$count_taxi+p$count_bus+p$count_truck+p$count_car
+p<-p[c(-2:-6)]
+p<-group_by(p,district.x)
+p<-summarise(p,sum(tot,na.rm = T))
+
+ggplot(p, aes(x="", y=p$`sum(tot, na.rm = T)`, fill=p$district.x)) +
+ geom_bar(stat="identity", width=5,color="white") +
+ coord_polar("y", start=0)+labs(x="",y="",fill="מחוזות")+
+ scale_fill_brewer(palette="Set2")+theme_void()+
+ ggtitle("כמות הרכבים בכל מחוז","שנים 2017-2021")+ 
+ theme(plot.title = element_text(hjust = 0.5))+ 
+ theme(plot.subtitle = element_text(hjust = 0.5))+
+ geom_label(aes(label = p$`sum(tot, na.rm = T)`),
+       color = "black",
+       position = position_stack(vjust = 0.5),
+       show.legend = FALSE) 
+
+
+
+```
+
+מגרף זה ניתן לראות שמחוז יהודה ושומרון מחזיק בכמות רכבים קטנה ביחס ליתר
+המחוזות, על כן לא נסיק על אוכלוסייה זו מסקנות אמפיריות.\
+\
+\
+\
+
+## האם ישנה השפעה של כמות התאונות הממוצעת של סוגי כלי הרכב במחוזות השונים?
+
+### סטטיסטיקה תיאורית
+
+בתרשים הנוכחי מוצג סך מס' התאונות הכללי בכל מחוז בין השנים 2012 עד 2021-
+גרף זה אינטראקטיבי בבקשה לחץ לקבלת המידע.
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE,comment="",prompt=FALSE,results='hide'}
+ 
+p<-Table_2012
+p<-mutate(Table_2012[c(-1:-6,-8:-17)],year=2013)
+p<-rbind(p,mutate(Table_2013[c(-1:-6,-8:-17)],year=2013))
+p<-rbind(p,mutate(Table_2014[c(-1:-6,-8:-17)],year=2014))
+p<-rbind(p,mutate(Table_2015[c(-1:-6,-8:-17)],year=2015))
+p<-rbind(p,mutate(Table_2016[c(-1:-6,-8:-17)],year=2016))
+p<-rbind(p,mutate(Table_2017[c(-1:-6,-8:-17)],year=2017))
+p<-rbind(p,mutate(Table_2018[c(-1:-6,-8:-17)],year=2018))
+p<-rbind(p,mutate(Table_2019[c(-1:-6,-8:-17)],year=2019))
+p<-rbind(p,mutate(Table_2020[c(-1:-6,-8:-17)],year=2020))
+p<-rbind(p,mutate(Table_2021[c(-1:-6,-8:-17)],year=2021))
+p<-mutate(p,`17 - 24`=((p$`17 - 24`)/100)*p$sum_age,`25 - 44`=((p$`25 - 44`)/100)*p$sum_age,`>=75`=((p$`>=75`)/100)*p$sum_age,`45 - 64`=((p$`45 - 64`)/100)*p$sum_age,`65 - 74`=((p$`65 - 74`)/100)*p$sum_age)
+p<-mutate(p,district=district.x,district.x=NULL)
+p$`17 - 24`<-(as.numeric(p$`17 - 24`))
+p$`65 - 74`<-(as.numeric(p$`65 - 74`))
+p$`45 - 64`<-(as.numeric(p$`45 - 64`))
+p$`>=75`<-(as.numeric(p$`>=75`))
+p<-group_by(p,district)
+x<-summarise(p,'17-24'=sum(`17 - 24`,na.rm = TRUE),'25-44'=sum(`25 - 44`,na.rm = TRUE),'>=75'=sum(`>=75`,na.rm = TRUE),'45-64'=sum(`45 - 64`,na.rm = TRUE),'65-74'=sum(`65 - 74`,na.rm = TRUE))
+
+
+x$sum1<-x$`17-24`+x$`25-44`+x$`45-64`+x$`65-74`+x$`>=75`
+x<-x[c(-2:-6)]
+#lat lng
+#30.8296° N, 35.0388° E דרום 13791
+#32.8972° N, 35.3027° E צפון 11643
+#31.9521° N, 34.9066° E מרכז 22311
+#32.4814° N, 34.9948° E חיפה 15664
+#31.7648° N, 34.9948° E ירושלים 12416
+#31.9032° N, 35.2035° E יהודה ושומרון 339
+#32.0853° N, 34.7818° E תל אביב 29760
+unique(p$district)
+```
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE,comment="",prompt=FALSE,fig.align='default',fig.width=6,fig.height=6}
+
+m <- leaflet()
+m <- addTiles(m)
+m <- addMarkers(m, lng=35.0388, lat=30.8296, popup="מחוז דרום-13791 תאונות")
+m <- addMarkers(m, lng=35.3027, lat=32.8972, popup="מחוז צפון-11643 תאונות")
+m <- addMarkers(m, lng=34.9066, lat=31.9521, popup="מחוז מרכז-22311 תאונות")
+m <- addMarkers(m, lng=34.9948, lat=32.4814, popup="מחוז חיפה-15664 תאונות")
+m <- addMarkers(m, lng=34.9948, lat=31.7648, popup="מחוז ירושלים-12416 תאונות")
+m <- addMarkers(m, lng=35.2035, lat=31.9032, popup="מחוז יהודה ושומרון-339 תאונות")
+m <- addMarkers(m, lng=34.7818, lat=32.0853, popup="מחוז תל אביב-29760 תאונות")
+m
+```
+
+\
+
+בשאלה זו ביצענו נרמול לכמות התאונות ביחס לכל כלי רכב לפי חלוקה למחוזות,
+כדי לבחון את ההשפעה היחסית של כמות התאונות הממוצעת בכל מחוז, להלן
+הנתונים:\
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE,comment="",prompt=FALSE}
+#####Summary
+Q1<-data.frame(Table_4$district,Table_4$accident_motorcycle,Table_4$accident_taxi,Table_4$accident_bus,Table_4$accident_truck,Table_4$accident_car)
+Q1<-rename(Q1,district='Table_4.district',motorcycle='Table_4.accident_motorcycle',taxi='Table_4.accident_taxi',bus='Table_4.accident_bus',truck='Table_4.accident_truck',car='Table_4.accident_car')
+Q1<-melt(Q1,id.vers=c("district"),measure.vars=c("motorcycle", "taxi", "bus","truck","car"),
+     variable.name="vehicle type",
+     value.name="accident")
+Q1$accident<-as.numeric(Q1$accident)
+summary(Q1$accident)
+Q1<-as_tibble(Q1)
+group2<-Q1 %>% group_by(`vehicle type`) %>% summarize(min= min(accident),
+                           median = median(accident),
+                           mean = mean(accident),
+                           max = max(accident),
+                           var= var(accident))
+as.data.frame(group2)
+```
+
+על מנת לתאר את האוכלוסייה, בגרף הבא ניתן לראות את כמות התאונות הממוצעת
+של סוג כלי רכב בכל מחוז
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE,comment="",prompt=FALSE,fig.height=8,fig.width=10}
+#####Grouped barplot with ggplot2:Y-Average amount of accidents,X1-Vehicle type,X-Districts 
+p<-rbind(Table_2012[c(-1,-8:-ncol(Table_2012))],Table_2013[c(-1,-8:-ncol(Table_2012))],Table_2014[c(-1,-8:-ncol(Table_2012))],Table_2015[c(-1,-8:-ncol(Table_2012))],Table_2016[c(-1,-8:-ncol(Table_2012))],Table_2017[c(-1,-8:-ncol(Table_2012))],Table_2018[c(-1,-8:-ncol(Table_2012))],Table_2019[c(-1,-8:-ncol(Table_2012))],Table_2020[c(-1,-8:-ncol(Table_2012))],Table_2021[c(-1,-8:-ncol(Table_2012))])
+p$accident_motorcycle<-as.numeric((p$accident_motorcycle))
+p$accident_truck<-as.numeric((p$accident_truck))
+p$accident_taxi<-as.numeric((p$accident_taxi))
+p$accident_bus<-as.numeric((p$accident_bus))
+p$accident_car<-as.numeric((p$accident_car))
+p<-group_by(p,district.x)
+p<-summarise(p,"פרטי"=mean(accident_car,na.rm=T),"אוטובוסים"=mean(accident_bus,na.rm=T),"משאית"=mean(accident_truck,na.rm=T),"מונית"=mean(accident_taxi,na.rm=T),"אופנוע"=mean(accident_motorcycle,na.rm=T))
+p<-melt(p)
+ggplot(p, aes(x=district.x, y=value, fill=variable)) + 
+ geom_bar(stat="identity", position=position_dodge())+
+ ggtitle("כמות התאונות הממוצעות לפי סוג כלי רכב","שנים 2012-2021")+
+ theme(plot.title = element_text(hjust = 0.5))+ 
+ theme(plot.subtitle = element_text(hjust = 0.5))+
+ labs(x="מחוז",y="ערך תאונות ממוצע",fill="סוג כלי רכב")+
+ geom_text(aes(label =round(value,2) ), 
+      position = position_dodge(0.9),vjust=-1)+
+ scale_fill_manual(values=c("skyblue1","palegreen","orchid","sandybrown","khaki1"))
+
+
+```
+
+בגרף זה ניתן לראות כי כמות התאונות בכלי רכב פרטיים היא הגבוהה ביותר בכל
+המחוזות\
+
+\
+\
+
+### סטטיסטיקה היסקית
+
+\
+מבחן סטטיסטי- רגרסיה מרובת ערכים\
+רגרסיה ליניארית מרובת ערכים היא שיטה לבדיקת קיום קשר בין משתנה תלוי
+מוסבר אחד (Y) לבין כמה משתנים בלתי תלויים מסבירים (X)
+
+𝑦=𝛽0+𝛽1𝑥1+𝛽2𝑥2+𝛽3𝑥3+𝛽4𝑥4+𝛽5𝑥5+𝜀𝑖\
+𝛼=5%\
+\
+$H_{0}$: 𝛽1=𝛽2=𝛽3=𝛽4=𝛽5=0\
+$H_{1}$:else\
+
+משתנה מסביר- ממוצעי התאונות כלי הרכבה השונים (i=1-5)\
+משתנה מוסבר- כמות התאונות\
+\
+
+### בדיקת הנחות המודל
+
+\
+נורמליות (shapiro)- השגיאות מתפלגות נורמליות.\
+
+```{r,echo=FALSE,comment="",prompt=FALSE,warning=FALSE}
+###############Question_1###############
+Question_1<-data.frame(unique(Table_7$district))
+Question_1<-rename(Question_1,district='unique.Table_7.district.')
+Question_1$motorcycle<-as.numeric(0)
+Question_1$car<-as.numeric(0)
+Question_1$taxi<-as.numeric(0)
+Question_1$bus<-as.numeric(0)
+Question_1$truck<-as.numeric(0)
+Question_1$sum<-as.numeric(0) 
+type<-list("","avg_motorcycle","avg_car","avg_taxi","avg_bus","avg_truck")
+for(i in 2:6){
+ for (j in 1:7){
+  x<-Table_4[Table_4$district==Question_1[j,1],]
+  Question_1[j,i]<-sum(as.numeric(x[,type[[i]]]))/length(x[,type[[i]]]) #length(x$district)
+  x<-as.numeric(0)
+ }
+}
+for (i in 1:7){
+ Question_1[i,7]<-sum(as.numeric(Table_4$district==Question_1[i,1],20))
+}
+```
+
+```{r,echo=TRUE,comment="",prompt=FALSE,warning=FALSE}
+
+#####normality test for the errors
+lim<-lm(data=Question_1,sum~motorcycle+car+taxi+bus+truck)
+shapiro.test<-shapiro.test(lim$residuals)
+if (shapiro.test[["p.value"]]<0.05)
+{
+ print ("Reject H0, The values are not normally distributed")
+}else
+{
+ print ("NOT Reject H0, The values are normally distributed")
+}
+```
+
+ניתן לראות כי השגיאות לפי מבחן שפירו אכן מתפלגות נורמלית.\
+\
+
+בת"ל- כלל המשתנים המסבירים בת"ל (ממוצעי התאונות כלי הרכב השונים).\
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE,comment="",prompt=FALSE}
+
+#####Correlation test
+chisq.test <- chisq.test(table(Question_1$motorcycle,Question_1$car))
+if (chisq.test[["p.value"]]<0.05)
+{
+ print ("Reject H0,There is a dependency between motorcycle and car ")
+}else
+{
+ print ("NOT Reject H0,There is no dependence between motorcycle and car")
+}
+chisq.test <- chisq.test(table(Question_1$motorcycle,Question_1$taxi))
+if (chisq.test[["p.value"]]<0.05)
+{
+ print ("Reject H0,There is a dependence between motorcycle and taxi")
+}else
+{
+ print ("NOT Reject H0,There is no dependence between motorcycle and taxi")
+}
+chisq.test <- chisq.test(table(Question_1$motorcycle,Question_1$bus))
+
+if (chisq.test[["p.value"]]<0.05)
+{
+ print ("Reject H0,There is a dependence between motorcycle and bus")
+}else
+{
+ print ("NOT Reject H0,There is no dependence between motorcycle and bus")
+}
+chisq.test <- chisq.test(table(Question_1$motorcycle,Question_1$truck))
+if (chisq.test[["p.value"]]<0.05)
+{
+ print ("Reject H0,There is a dependence between motorcycle and truck")
+}else
+{
+ print ("NOT Reject H0,There is no dependence between motorcycle and truck")
+}
+chisq.test <- chisq.test(table(Question_1$car,Question_1$taxi))
+if (chisq.test[["p.value"]]<0.05)
+{
+ print ("Reject H0,There is a dependence between car and taxi")
+}else
+{
+ print ("NOT Reject H0,There is no dependence between car and taxi")
+}
+chisq.test <- chisq.test(table(Question_1$car,Question_1$bus))
+if (chisq.test[["p.value"]]<0.05)
+{
+ print ("Reject H0,There is a dependence between car and bus")
+}else
+{
+ print ("NOT Reject H0,There is no dependence between car and bus")
+}
+chisq.test <- chisq.test(table(Question_1$car,Question_1$truck))
+if (chisq.test[["p.value"]]<0.05)
+{
+ print ("Reject H0,There is a dependence between car and truck")
+}else
+{
+ print ("NOT Reject H0,There is no dependence between car and truck")
+}
+chisq.test <- chisq.test(table(Question_1$taxi,Question_1$bus))
+if (chisq.test[["p.value"]]<0.05)
+{
+ print ("Reject H0,There is a dependence between taxi and bus")
+}else
+{
+ print ("NOT Reject H0,There is no dependence between taxi and bus")
+}
+chisq.test <- chisq.test(table(Question_1$taxi,Question_1$truck))
+if (chisq.test[["p.value"]]<0.05)
+{
+ print ("Reject H0,There is a dependence between taxi and truck")
+}else
+{
+ print ("NOT Reject H0,There is no dependence between taxi and truck")
+}
+chisq.test <- chisq.test(table(Question_1$bus,Question_1$truck))
+if (chisq.test[["p.value"]]<0.05)
+{
+ print ("Reject H0,There is a dependence between bus and truck")
+}else
+{
+ print ("NOT Reject H0,There is no dependence between bus and truck")
+}
+```
+
+ניתן לראות כי כל המשתנים של הרגרסיה בת"ל\
+\
+
+### רגרסיה ליניארית
+
+\
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE,comment="",prompt=FALSE}
+
+#####regression
+lim<-summary(lim)
+critic_val<- qf(0.95,df1=lim[["fstatistic"]][["numdf"]],df2=lim[["fstatistic"]][["dendf"]])
+f_val<- lim[["fstatistic"]][["value"]]
+if (f_val>critic_val)
+{
+ print ("Reject H0,There is a linear relationship Between accident averages in the different types of vehicles and the number of accidents ")
+}else
+{
+ print ("NOT Reject H0,There is no linear relationship Between accident averages in the different types of vehicles and the number of accidents")
+}
+```
+
+### מסקנה
+
+\
+לא ניתן לחזות את כמות התאונות ע"ס ממוצעי התאונות בכלי הרכב השונים אך
+ניתן לראות כי המשתנה המסביר המשפיע ביותר הינו כלי רכב פרטיים.\
+\
+\
+\
+\
+\
+
+## האם קיים הבדל בכמות התאונות בסוגי הרכב השונים המרחב גאוגרפי? אם כן, איזה כלי תחבורה בעל כמות התאונות נמוכה ביותר?
+
+### סטטיסטיקה תיאורית
+
+בתרשים הבא ניתן לראות את כמות התאונות בפילוח לפי מחוזות ולפי שנים. מספרי
+מחוזות:\
+\
+1-מחוז ירושלים\
+[ 2-מחוז צפון]{style="color:darksalmon"}.\
+[ 3-מחוז תל אביב]{style="color:green"}.\
+[ 4-מחוז חיפה]{style="color:blue"}.\
+[ 5-מחוז יהודה ושומרון]{style="color:darkturquoise"}.\
+[ 6-מחוז דרום]{style="color:magenta"}.\
+[ 7-מחוז מרכז]{style="color:gold"}.\
+גרף זה אינטראקטיבי בבקשה לחץ לקבלת תמונה מזווית שונה
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE,webgl=TRUE,fig.align='right',fig.width=6,fig.height=6}
+#####3D PLOT-3D histogram:X-Years,Y-Districts,Z-Number of accidents
+p<-select(Table_4,year,accident_motorcycle,accident_taxi,accident_bus,accident_truck,accident_car,district)
+p$sum_of_accidents=as.numeric(p$accident_motorcycle)+as.numeric(p$accident_taxi)+as.numeric(p$accident_bus)+as.numeric(p$accident_truck)+as.numeric(p$accident_car)
+p<-select(p,year,sum_of_accidents,district)
+p$district<-replace(p$district,p$district=="מחוז ירושלים",1)
+p$district<-replace(p$district,p$district=="מחוז צפון",2)
+p$district<-replace(p$district,p$district=="מחוז תל אביב",3)
+p$district<-replace(p$district,p$district=="מחוז חיפה",4)
+p$district<-replace(p$district,p$district=="מחוז יהודה ושומרון",5)
+p$district<-replace(p$district,p$district=="מחוז דרום",6)
+p$district<-replace(p$district,p$district=="מחוז מרכז",7)
+t<-group_by(p,district,year)
+t<-summarise(t,val=sum(sum_of_accidents))
+p<-plot3d( 
+ x=t$year, y=t$district, z=t$val, 
+ col = t$district, lwd = 6,
+ type = 'h', 
+ xlab="Year", ylab="District", zlab="Total accidents")+
+ text3d(x=t$year,y=t$district, z=t$val,
+     texts =t$val,cex=0.8) +
+ title3d(main="Evaluation - Number of casualties",line=6)
+p
+rglwidget()
+
+```
+
+מחוז תל אביב מהווה המחוז בעל כמות התאונות הכוללת הגבוהה ביותר באופן
+מובהק לאורך השנים.\
+\
+
+```{r ,echo=FALSE ,warning=FALSE ,message=FALSE ,comment="" ,prompt=TRUE ,fig.align="left"}
+
+#####Interactive tree map 
+p<-rbind(Table_2021[c(-1:-6,-13:-23)],Table_2020[c(-1:-6,-13:-23)],Table_2019[c(-1:-6,-13:-23)],Table_2018[c(-1:-6,-13:-23)],Table_2017[c(-1:-6,-13:-23)],Table_2016[c(-1:-6,-13:-23)],Table_2015[c(-1:-6,-13:-23)],Table_2014[c(-1:-6,-13:-23)],Table_2013[c(-1:-6,-13:-23)],Table_2012[c(-1:-6,-13:-23)])
+p$count_motorcycle<-as.numeric(p$count_motorcycle)
+p$count_taxi<-as.numeric(p$count_taxi)
+p$count_bus<-as.numeric(p$count_bus)
+p$count_truck<-as.numeric(p$count_truck)
+p$count_car<-as.numeric(p$count_car)
+p<-group_by(p,district.x)
+p<-summarise(p,"פרטי":=sum(count_car),"אוטובוס"=sum(count_bus),"משאית"=sum(count_truck),"מונית"=sum(count_taxi),"אופנוע"=sum(count_motorcycle))
+x<-melt(p,variable.name = "typeof",value.name = "qty")
+
+
+x$district.x<-as.character(x$district.x)
+as.tibble(x)
+data1 <- data.frame(x)
+data2 <- data1$district.x[order(data1$district.x,decreasing = F)]
+dt<-group_by(data1,district.x)
+dt<-summarise(dt,tot=sum(qty))
+dt1 <- data.frame(
+ subtopic = c("כללי","מחוז דרום","מחוז חיפה","מחוז יהודה ושומרון","מחוז ירושלים","מחוז מרכז","מחוז צפון","מחוז תל אביב","רכב פרטי","רכב פרטי","רכב פרטי","רכב פרטי","רכב פרטי","רכב פרטי","רכב פרטי","אוטובוס","אוטובוס","אוטובוס","אוטובוס","אוטובוס","אוטובוס","אוטובוס","משאית","משאית","משאית","משאית","משאית","משאית","משאית","מונית","מונית","מונית","מונית","מונית","מונית","מונית","אופנוע","אופנוע","אופנוע","אופנוע","אופנוע","אופנוע","אופנוע"),
+ topic = c("","כללי","כללי","כללי","כללי","כללי","כללי","כללי","מחוז דרום","מחוז חיפה","מחוז יהודה ושומרון","מחוז ירושלים","מחוז מרכז","מחוז צפון","מחוז תל אביב","מחוז דרום","מחוז חיפה","מחוז יהודה ושומרון","מחוז ירושלים","מחוז מרכז","מחוז צפון","מחוז תל אביב","מחוז דרום","מחוז חיפה","מחוז יהודה ושומרון","מחוז ירושלים","מחוז מרכז","מחוז צפון","מחוז תל אביב","מחוז דרום","מחוז חיפה","מחוז יהודה ושומרון","מחוז ירושלים","מחוז מרכז","מחוז צפון","מחוז תל אביב","מחוז דרום","מחוז חיפה","מחוז יהודה ושומרון","מחוז ירושלים","מחוז מרכז","מחוז צפון","מחוז תל אביב"),
+ n= c(sum(dt$tot),dt$tot,data1$qty))
+
+p <- plot_ly(
+ dt1,size=8,height = 8,width = 5,
+ type='treemap',
+ labels=~subtopic,
+ parents=~topic,
+ values= ~n
+)
+p
+```
+
+
+גרף זה אינטראקטיבי בבקשה לחץ לקבלת המידע\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+ואילו בגרף הנוכחי בחרנו להציג את כמות התאונות בחתך למחוזות ובחלוקה לכלי
+רכב השונים, גרף זה מאפשר ניתוח ויזואלי באופן ישיר בין כמות התאונות לחלק
+היחסי בתרשים העץ.\
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE,comment="",prompt=FALSE,fig.width=6,fig.height=6,fig.align='left'}
+
+#####Boxplot:X-Types of accidents,Y-Amount of accidents 
+p<-Table_3[-nrow(Table_3),-1]
+t<-melt(p)
+t$variable<-as.factor(t$variable)
+x1<-group_by(t,variable)
+x1<-(summarise(x1,means=mean(value)))
+x1$means<-round(x1$means,2)
+ggplot(t,aes(x=variable,y=value,color=variable))+geom_boxplot()+
+ geom_text(data = as.data.frame(x1), aes(label = means, y = means,x=variable ),vjust=-4)+
+ labs(subtitle="הצגת ממוצע התאונות בפילוח לסוגי תאונות",title ="התפלגות כמות התאונות, בכל סוג תאונה",x="סוגי תאונות",y="כמות התאונות",colour="סוגי תאונות")+
+ theme(plot.title = element_text(hjust = 0.5))+
+ theme(plot.subtitle = element_text(hjust = 0.5)) +
+ scale_y_continuous( limits=c(0, 20000),breaks =seq(0,20000,by=1000) )
+
+```
+
+### סטטיסטיקה היסקית
+
+\
+מבחן סטטיסטי- שונות חד כיווני- מודל בלוקים\
+השוואה בין מס' טיפולים שונים ע"מ לקבוע את הטיפול המשמעותי ביותר. תוך
+הקטנת הרעש הנוצר בחלוקה לבלוקים\
+
+𝑦𝑖𝑗=𝜇+𝛼𝑗 +𝛽𝑖 +𝜀𝑖𝑗\
+\
+$H_{0}$: 𝛽1 =𝛽2 =𝛽3 =𝛽4 =𝛽5 =𝛽6=𝛽7=0\
+$H_{1}$:else\
+\
+$H_{0}$: 𝛼1 =𝛼2 =𝛼3 =𝛼4 =𝛼5 =0\
+$H_{1}$:else\
+
+טיפול- כלי הרכב השונים (רכב, אופנוע, מונית, משאית, אוטובוס)\
+בלוקים- מחוזות\
+
+### הנחות המודל
+
+לבדיקת נורמליות (shapiro)- המשתנה המוסבר אינו מתפלג נורמלית.\
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE,comment="",prompt=FALSE}
+
+###############Question_2###############
+Question_2<-data.frame(unique(Table_7$district))
+Question_2<-rename(Question_2,district='unique.Table_7.district.')
+Question_2$motorcycle<-as.numeric(0)
+Question_2$taxi<-as.numeric(0)
+Question_2$bus<-as.numeric(0)
+Question_2$truck<-as.numeric(0)
+Question_2$car<-as.numeric(0)
+j<-1
+for (i in Question_2$district) {
+ sum1<-sum(as.numeric(Table_4[Table_4$district==i,'accident_motorcycle' ]))
+ Question_2[j,'motorcycle']<-sum1/length(Table_4[Table_4$district==i,])
+ sum1<-sum(as.numeric(Table_4[Table_4$district==i,'accident_taxi' ]))
+ Question_2[j,'taxi']<-sum1/length(Table_4[Table_4$district==i,])
+ sum1<-sum(as.numeric(Table_4[Table_4$district==i,'accident_bus' ]))
+ Question_2[j,'bus']<-sum1/length(Table_4[Table_4$district==i,])
+ sum1<-sum(as.numeric(Table_4[Table_4$district==i,'accident_truck' ]))
+ Question_2[j,'truck']<-sum1/length(Table_4[Table_4$district==i,])
+ sum1<-sum(as.numeric(Table_4[Table_4$district==i,'accident_car' ]))
+ Question_2[j,'car']<-sum1/length(Table_4[Table_4$district==i,])
+ j<-j+1
+}
+
+shapiro.test<-shapiro.test(Q1$accident)
+if (shapiro.test[["p.value"]]<0.05)
+{
+ print ("Reject H0, The number of accidents are not normally distributed")
+}else
+{
+ print ("NOT Reject H0, The number of accidents are normally distributed")
+}
+```
+
+בת"ל (cor)- אין תלות בין הטיפולים השונים\
+\
+
+אי שוויון (bartlett)- קיים אי שוויון בין המשתנה המוסבר הן לבלוקים והן
+לטיפולים.\
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE,comment="",prompt=FALSE}
+
+
+#####Equality of differences test
+bartlett.test<-bartlett.test(accident~district, Q1)
+if (bartlett.test[["p.value"]]<0.05)
+{
+ print ("Reject H0, There is no equality of differences in the block")
+}else
+{
+ print ("NOT Reject H0, there is equality of differences in the block")
+}
+bartlett.test<-bartlett.test(accident~`vehicle type`, Q1)
+if (bartlett.test[["p.value"]]<0.05)
+{
+ print ("Reject H0,There is no equality of differences in the factor")
+}else
+{
+ print ("Reject H0,There is equality of differences in the factor")
+}
+
+```
+
+בדיקת הומוגניות (duncan)\
+\
+קבוצה כחולה- רכבים פרטיים\
+קבוצה אדומה- אופנועים\
+קבוצה ירוקה- משאיות, מוניות ואוטובוסים
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE,comment="",prompt=FALSE,results='hide'}
+
+#####homogeneity test
+
+analysis<-lm(accident~district + `vehicle type`,Q1)
+a1<-anova(analysis)
+duncan<-duncan.test(Q1$accident,Q1$`vehicle type`,a1[3,1],a1[3,3],0.05,console = TRUE)
+
+```
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE,comment="",prompt=FALSE}
+plot(duncan)
+```
+
+### מסקנה
+
+\
+קיימת השפעה של המחוזות וכלי הרכב על כמות התאונות\
+כמות התאונות המינימלית- קבוצת כלי התחבורה הציבורית\
+
+## האם קיים קשר בין כמות התאונות בפילוח לטווחי בגיל השונים?
+
+### סטטיסטיקה תיאורית
+
+ראשית נרצה להעריך את כמות התאונות בטווחי הגיל ומחוזות השונים
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE,comment="",prompt=FALSE,fig.height=6,fig.width=10}
+#####Grouped barplot:X-Districts,X(internal)-Range of detectors,Y-Amount of accidents 
+p<-Table_2012
+p<-mutate(Table_2012[c(-1:-6,-8:-17)],year=2013)
+p<-rbind(p,mutate(Table_2013[c(-1:-6,-8:-17)],year=2013))
+p<-rbind(p,mutate(Table_2014[c(-1:-6,-8:-17)],year=2014))
+p<-rbind(p,mutate(Table_2015[c(-1:-6,-8:-17)],year=2015))
+p<-rbind(p,mutate(Table_2016[c(-1:-6,-8:-17)],year=2016))
+p<-rbind(p,mutate(Table_2017[c(-1:-6,-8:-17)],year=2017))
+p<-rbind(p,mutate(Table_2018[c(-1:-6,-8:-17)],year=2018))
+p<-rbind(p,mutate(Table_2019[c(-1:-6,-8:-17)],year=2019))
+p<-rbind(p,mutate(Table_2020[c(-1:-6,-8:-17)],year=2020))
+p<-rbind(p,mutate(Table_2021[c(-1:-6,-8:-17)],year=2021))
+p<-mutate(p,`17 - 24`=((p$`17 - 24`)/100)*p$sum_age,`25 - 44`=((p$`25 - 44`)/100)*p$sum_age,`>=75`=((p$`>=75`)/100)*p$sum_age,`45 - 64`=((p$`45 - 64`)/100)*p$sum_age,`65 - 74`=((p$`65 - 74`)/100)*p$sum_age)
+p<-mutate(p,district=district.x,district.x=NULL)
+p$`17 - 24`<-(as.numeric(p$`17 - 24`))
+p$`65 - 74`<-(as.numeric(p$`65 - 74`))
+p$`45 - 64`<-(as.numeric(p$`45 - 64`))
+p$`>=75`<-(as.numeric(p$`>=75`))
+p<-group_by(p,district)
+x<-summarise(p,'17-24'=sum(`17 - 24`,na.rm = TRUE),'25-44'=sum(`25 - 44`,na.rm = TRUE),'>=75'=sum(`>=75`,na.rm = TRUE),'45-64'=sum(`45 - 64`,na.rm = TRUE),'65-74'=sum(`65 - 74`,na.rm = TRUE))
+
+x<-melt(x,variable.name = "ages",value.name="Number_of_accidents")
+ggplot(x, aes(x=district, y=Number_of_accidents, fill=sort(ages))) + 
+ geom_bar(stat="identity", position=position_dodge())+
+ ggtitle("כמות תאונות בכל מחוז","בחלוקה לטווחי גיל שונים")+ 
+ theme(plot.title = element_text(hjust = 0.5))+ 
+ theme(plot.subtitle = element_text(hjust = 0.5))+
+ labs(x="מחוז",y="כמות תאונות",fill="טווחי גילאים")+
+ geom_text(aes(label =Number_of_accidents ), 
+      position = position_dodge(0.9),vjust=-1)
+
+```
+
+\
+מהגרף עולה כי גילאי 25-44 הוא טווח הגילאים המעורב בכמות תאונות הגבוה
+ביותר בכלל המחוזות ביחס ליתר טווחי הגילאים הנבדקים. הערכה היא שההפרש
+נובע מעצם היותו הטווח הגדול ביותר (חלוקה של משתנה קטגורי בטווחים לא
+שווים)\
+ניתן לראות את כמות התאונות ע"י השמת העכבר על הפלח שאותו נרצה לבחון.\
+\
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE,comment="",prompt=FALSE,fig.height=6,fig.width=6}
+p<-Table_2012
+p<-mutate(Table_2012[c(-1:-6,-8:-17)],year=2013)
+p<-rbind(p,mutate(Table_2013[c(-1:-6,-8:-17)],year=2013))
+p<-rbind(p,mutate(Table_2014[c(-1:-6,-8:-17)],year=2014))
+p<-rbind(p,mutate(Table_2015[c(-1:-6,-8:-17)],year=2015))
+p<-rbind(p,mutate(Table_2016[c(-1:-6,-8:-17)],year=2016))
+p<-rbind(p,mutate(Table_2017[c(-1:-6,-8:-17)],year=2017))
+p<-rbind(p,mutate(Table_2018[c(-1:-6,-8:-17)],year=2018))
+p<-rbind(p,mutate(Table_2019[c(-1:-6,-8:-17)],year=2019))
+p<-rbind(p,mutate(Table_2020[c(-1:-6,-8:-17)],year=2020))
+p<-rbind(p,mutate(Table_2021[c(-1:-6,-8:-17)],year=2021))
+p<-mutate(p,`17 - 24`=((p$`17 - 24`)/100)*p$sum_age,`25 - 44`=((p$`25 - 44`)/100)*p$sum_age,`>=75`=((p$`>=75`)/100)*p$sum_age,`45 - 64`=((p$`45 - 64`)/100)*p$sum_age,`65 - 74`=((p$`65 - 74`)/100)*p$sum_age)
+p<-mutate(p,district=district.x,district.x=NULL)
+p$`17 - 24`<-(as.numeric(p$`17 - 24`))
+p$`65 - 74`<-(as.numeric(p$`65 - 74`))
+p$`45 - 64`<-(as.numeric(p$`45 - 64`))
+p$`>=75`<-(as.numeric(p$`>=75`))
+x<-summarise(p,'17-24'=sum(`17 - 24`,na.rm = TRUE),'25-44'=sum(`25 - 44`,na.rm = TRUE),'>=75'=sum(`>=75`,na.rm = TRUE),'45-64'=sum(`45 - 64`,na.rm = TRUE),'65-74'=sum(`65 - 74`,na.rm = TRUE))
+x1<-colnames(x)
+x2<-as.numeric(x[1:(length(x))])
+plot_ly(labels = x1, values = x2, type = "pie", 
+        marker = list(colors = hcl.colors(length(as.numeric(x2)), "Spectral")),
+        textinfo = "label+percent", 
+        hoverinfo = "text",
+        hovertext = paste(x1, x2, sep = ": ")) %>%
+  layout(title = "2013-2021,פילוח טווחי הגיל באוכלוסייה",
+         scene = list(camera = list(eye = list(x = -1.2, y = -1.2, z = 0.6)),
+                      xaxis = list(showticklabels = F, showgrid = F, zeroline = F),
+                      yaxis = list(showticklabels = F, showgrid = F, zeroline = F),
+                      zaxis = list(showticklabels = F, showgrid = F, zeroline = F)))
+
+```
+
+ניתן לראות כי גם ללא הפילוח למחוזות טווח הגילאים שעשה הכי הרבה תאונות הם
+25-44\
+\
+
+### סטטיסטיקה היסקית
+
+מבחן סטטיסטי- מתאם פירסון\
+מדד לקשר ליניארי בין שני משתנים כמותיים שערכיהם מתקבלים במדגם.\
+\
+𝛼=5%\
+$H_{0}$:𝜌=0\
+$H_{1}$:𝜌≠0\
+\
+X -- טווח גילאים (17-24, 25-44, 45-64 65-74(75+,\
+Y- כמות התאונות\
+\
+\
+
+### הנחות המודל
+
+בדיקת תלות בין המשתנים (כמות תאונות מול גיל)\
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE,comment="",prompt=FALSE}
+
+
+###############Question_3###############
+Question_3<-data.frame(2012:2021)
+Question_3<-rename(Question_3,year='X2012.2021')
+Question_3$`17 - 24`<-as.numeric(0)
+Question_3$`25 - 44`<-as.numeric(0)
+Question_3$`45 - 64`<-as.numeric(0)
+Question_3$`65 - 74`<-as.numeric(0)
+Question_3$`>=75`<-as.numeric(0)
+tableArray<- list(Table_2012,Table_2013, Table_2014,Table_2015,Table_2016,Table_2017,Table_2018,Table_2019,Table_2020,Table_2021)
+ageList<-list("17 - 24","25 - 44","45 - 64","65 - 74",">=75")
+for (t in 1:10) {
+ for (i in 1:5){
+  sum1<-sum(as.numeric(tableArray[[t]][[(ageList[[i]])]]))
+  Question_3[t,ageList[[i]]]<-sum1/length(tableArray[[t]][[ageList[[i]]]])
+ }
+}
+#####Correlation test
+cor<-cor.test(Question_3$`17 - 24`,Question_3$`25 - 44`, method = "pearson")
+
+
+cor<-cor[["estimate"]]
+if ((cor>=(0.8) & cor<=(1)) || (cor<=(-0.8) & cor>=(-1)))
+{
+ print ("NOT Reject H0,There is a definite connection between ages 17-24 and ages 25 - 44 ")
+}else
+{
+ print ("Reject H0,There is no a definite connection between ages 17-24 and ages 25 - 44")
+}
+cor.test(Question_3$`17 - 24`,Question_3$`45 - 64`, method = "pearson")
+if ((cor>=(0.8) & cor<=(1)) || (cor<=(-0.8) & cor>=(-1)))
+{
+ print ("NOT Reject H0,There is a definite connection between ages 17-24 and ages 45 - 64 ")
+}else
+{
+ print (" Reject H0,There is no a definite connection between ages 17-24 and ages 45 - 64")
+}
+cor.test(Question_3$`17 - 24`,Question_3$`65 - 74`, method = "pearson")
+if ((cor>=(0.8) & cor<=(1)) || (cor<=(-0.8) & cor>=(-1)))
+{
+ print ("NOT Reject H0,There is a definite connection between ages 17-24 and ages 65 - 74 ")
+}else
+{
+ print (" Reject H0,There is no a definite connection between ages 17-24 and ages 65 - 74")
+}
+cor.test(Question_3$`17 - 24`,Question_3$`>=75`, method = "pearson")
+if ((cor>=(0.8) & cor<=(1)) || (cor<=(-0.8) & cor>=(-1)))
+{
+ print ("NOT Reject H0,There is a definite connection between ages 17-24 and ages >=75 ")
+}else
+{
+ print (" Reject H0,There is no a definite connection between ages 17-24 and ages >=75")
+}
+cor.test(Question_3$`25 - 44`,Question_3$`>=75`, method = "pearson")
+if ((cor>=(0.8) & cor<=(1)) || (cor<=(-0.8) & cor>=(-1)))
+{
+ print ("NOT Reject H0,There is a definite connection between ages 25 - 44 and ages >=75 ")
+}else
+{
+ print (" Reject H0,There is no a definite connection between ages 25 - 44 and ages >=75")
+}
+cor.test(Question_3$`25 - 44`,Question_3$`65 - 74`, method = "pearson")
+if ((cor>=(0.8) & cor<=(1)) || (cor<=(-0.8) & cor>=(-1)))
+{
+ print ("NOT Reject H0,There is a definite connection between ages 25 - 44 and ages 65 - 74 ")
+}else
+{
+ print (" Reject H0,There is no a definite connection between ages 25 - 44 and ages 65 - 74")
+}
+cor.test(Question_3$`25 - 44`,Question_3$`45 - 64`, method = "pearson")
+if ((cor>=(0.8) & cor<=(1)) || (cor<=(-0.8) & cor>=(-1)))
+{
+ print ("NOT Reject H0,There is a definite connection between ages 25 - 44 and ages 45 - 64 ")
+}else
+{
+ print (" Reject H0,There is no a definite connection between ages 25 - 44 and ages 45 - 64")
+}
+cor.test(Question_3$`45 - 64`,Question_3$`65 - 74`, method = "pearson")
+if ((cor>=(0.8) & cor<=(1)) || (cor<=(-0.8) & cor>=(-1)))
+{
+ print ("NOT Reject H0,There is a definite connection between ages 45 - 64 and ages 65 - 74 ")
+}else
+{
+ print (" Reject H0,There is no a definite connection between ages 45 - 64 and ages 65 - 74")
+}
+cor.test(Question_3$`45 - 64`,Question_3$`>=75`, method = "pearson")
+if ((cor>=(0.8) & cor<=(1)) || (cor<=(-0.8) & cor>=(-1)))
+{
+ print ("NOT Reject H0,There is a definite connection between ages 45 - 64 and ages >=75 ")
+}else
+{
+ print (" Reject H0,There is no a definite connection between ages 45 - 64 and ages >=75")
+}
+```
+
+### מסקנה
+
+ניתן לראות כי ברמת מובהקות 5% נדחה את כל המבחנים ונסיק כי אין תלות בין
+גילאי הנהגים לכמות התאונות\
+
+\
+\
+\
+\
+\
+
+## האם קיים הבדל בטווח הגילאים 17-24 לבין טווח הגילאים 25-44 בכמות המעורבים בתאונות?
+
+בשאלה זו נרצה להעמיק עם השאלה הקודמת ולבדוק את האוכלוסיות המייצגות ביותר
+במדגם המחקר שהן 17-24 ו- 25-44\
+שאלה זו תכלול את אותה סטטיסטיקה תיאורית של השאלה שקדמה לה\
+
+### סטטיסטיקה היסקית
+
+מבחן סטטיסטי- מבחן tלהפרש תוחלות במדגמים בלתי תלויים\
+\
+$H_{0}$:𝜇1−𝜇2=0\
+$H_{1}$:𝜇1−𝜇2≠0\
+𝛼=5%\
+\
+
+X -- כמות תאונות בטווחי הגילאים 17-24\
+Y- כמות תאונות בטווחי הגילאים 25-44\
+\
+
+### הנחות המודל
+
+המשתנים בת"ל
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE,comment="",prompt=FALSE}
+
+
+Question_3.a<-data.frame(2012:2021)
+Question_3.a<-rename(Question_3.a,year='X2012.2021')
+Question_3.a$`17 - 24`<-Question_3$`17 - 24`
+Question_3.a$`25 - 44`<-Question_3$`25 - 44`
+#####Correlation test
+chisq.test <- chisq.test(table(Question_3.a$`17 - 24`,Question_3.a$`25 - 44`))
+if (chisq.test[["p.value"]]<0.05)
+{
+ print ("Reject H0,There is a dependence between bus and truck")
+}else
+{
+ print ("NOT Reject H0,There is no dependence between bus and truck")
+}
+```
+
+כעת נבדוק 17-24 אכן גדול מ 25-44\
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE,comment="",prompt=FALSE}
+
+#####T-test
+t.test<-t.test(Question_3$`17 - 24`,Question_3$`25 - 44`, paired = TRUE, alternative = "greater")
+t_crit<-qt(0.95,t.test[["parameter"]][["df"]])
+if(t.test[["statistic"]]>t_crit)
+{
+ print ("Reject H0,there are more accidents in ages 17 - 24 than ages 25 - 44")
+}else
+{
+ print ("NOT Reject H0,there are less or equall accidents in ages 17 - 24 than ages 25 - 44")
+}
+```
+
+נשים לב כי 17-24 לא גדול מ 25-44, לכן נרצה לבדוק האם להיפך מתקיים\
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE,comment="",prompt=FALSE}
+
+#####T-test
+t.test<-t.test(Question_3$`25 - 44`,Question_3$`17 - 24`, paired = TRUE, alternative = "greater")
+t_crit<-qt(0.95,t.test[["parameter"]][["df"]])
+if(t.test[["statistic"]]>t_crit)
+{
+ print ("Reject H0,there are more accidents in ages 25 - 44 than ages 17 - 24")
+}else
+{
+ print ("NOT Reject H0,there are less or equall accidents in ages 25 - 44 than ages 17 - 24")
+}
+```
+
+### מסקנה
+
+תוחלת התאונות בטווחי גילאי 17-24 אינה גבוה מטווח גילאי 25-44\
+בנוסף במבחן t הופכי מצאנו כי אכן 25-44 הוא הטווח עם תוחלת התאונות הגבוה
+יותר\
+\
+\
+\
+\
+\
+\
+
+## האם יש תלות בכמות התאונות בין השעות השונות? ואם כן, מהי השעה המסוכנת ביותר?
+
+### סטטיסטיקה תיאורית
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE,comment="",prompt=FALSE,fig.width=10,fig.height=6}
+
+
+#####Boxplot:X-Hours interval,Y-The number of accidents
+p<-mutate(Table_6,'00:00-01:59'=Table_6$`00:00-00:59`+Table_6$`01:00-01:59`,'02:00-03:59'=Table_6$`02:00-02:59`+Table_6$`03:00-03:59`,'04:00-05:59'=Table_6$`04:00-04:59`+Table_6$`05:00-05:59`,'06:00-07:59'=Table_6$`06:00-06:59`+Table_6$`07:00-07:59`,'08:00-09:59'=Table_6$`08:00-08:59`+Table_6$`09:00-09:59`,'10:00-11:59'=Table_6$`10:00-10:59`+Table_6$`11:00-11:59`,'12:00-13:59'=Table_6$`12:00-12:59`+Table_6$`13:00-13:59`,'14:00-15:59'=Table_6$`14:00-14:59`+Table_6$`15:00-15:59`,'16:00-17:59'=Table_6$`16:00-16:59`+Table_6$`17:00-17:59`,'18:00-19:59'=Table_6$`18:00-18:59`+Table_6$`19:00-19:59`,'20:00-21:59'=Table_6$`20:00-20:59`+Table_6$`21:00-21:59`,'22:00-23:59'=Table_6$`22:00-22:59`+Table_6$`23:00-23:59`)[c(-2:-25)]
+p<-filter(p,between(year,2017,2021))[-1]
+t<-melt(p)
+x1<-group_by(t,variable)
+x1<-summarise(x1,means=mean(value))
+#x1<-as.vector(x1[-1])
+ggplot(t,aes(x=variable,y=value,color=variable))+geom_boxplot()+
+  geom_text(data = as.data.frame(x1), aes(label = means, y = means,x=variable ),vjust=-3)+
+  labs(subtitle="הצגת ממוצע התאונות לכל טווח",title ="התפלגות כמות התאונות, בכל טווחי השעות ביום",x="שעות היום",y="כמות התאונות",colour="טווחי שעות")+
+  theme(plot.title = element_text(hjust = 0.5))+
+  theme(plot.subtitle = element_text(hjust = 0.5))
+```
+
+\
+בגרף לעיל, מוצגת התפלגות כמות התאונות הממוצעת בטווחי שעות היממה, ניתן
+להבחין כי כמות התאונות במרבית טווחי השעות לא מתפלגת נורמלית, כמו כן,
+16:00-18:00 הינו טווח השעות בעל כמות התאונות הממוצעת הגבוה ביותר.\
+\
+בגרף הבא ניתן לראות את כמות התאונות בין השנים 2003-2022 בחלוקה לטווחי
+שעות.\
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE,comment="",prompt=FALSE,fig.width=10,fig.height=6}
+
+#####Stacked bar plot:X-hours of the day,Y-amount of accidents per hour 
+p<-mutate(Table_6,'00:00-01:59'=Table_6$`00:00-00:59`+Table_6$`01:00-01:59`,'02:00-03:59'=Table_6$`02:00-02:59`+Table_6$`03:00-03:59`,'04:00-05:59'=Table_6$`04:00-04:59`+Table_6$`05:00-05:59`,'06:00-07:59'=Table_6$`06:00-06:59`+Table_6$`07:00-07:59`,'08:00-09:59'=Table_6$`08:00-08:59`+Table_6$`09:00-09:59`,'10:00-11:59'=Table_6$`10:00-10:59`+Table_6$`11:00-11:59`,'12:00-13:59'=Table_6$`12:00-12:59`+Table_6$`13:00-13:59`,'14:00-15:59'=Table_6$`14:00-14:59`+Table_6$`15:00-15:59`,'16:00-17:59'=Table_6$`16:00-16:59`+Table_6$`17:00-17:59`,'18:00-19:59'=Table_6$`18:00-18:59`+Table_6$`19:00-19:59`,'20:00-21:59'=Table_6$`20:00-20:59`+Table_6$`21:00-21:59`,'22:00-23:59'=Table_6$`22:00-22:59`+Table_6$`23:00-23:59`)[c(-2:-25)]
+x<-melt(p,id.vars = "year")
+ggplot(x, aes(x = year, y = value, fill = variable, label = value)) +
+  geom_bar(stat = "identity") +
+  geom_text(size = 3, position = position_stack(vjust = 0.5))+
+  scale_fill_brewer(palette="Set3")+
+  labs(x="שנים",y="כמות תאונות",fill="טווחי שעות")+
+  ggtitle("כמות התאונות בשעות היום השונות, לפי שנים 2003-2022","בפילוח לפי שעות היום")+ 
+  theme(plot.title = element_text(hjust = 0.5))+ 
+  theme(plot.subtitle = element_text(hjust = 0.5))+
+  scale_x_continuous(breaks=seq(2003, 2022, by=1), limits=c(2002,2023))
+
+```
+
+\
+\
+
+### סטטיסטיקה היסקית
+
+מבחן סטטיסטי- חי בריבוע לאי תלות\
+מבחן השערה סטטיסטית המשמש כדי לקבוע אם שני משתנים קטגוריים או נומינליים
+עשויים להיות קשורים או לא.\
+\
+$H_{0}$:המשתנים בין תלות קיימת לא\
+$H_{1}$:המשתנים בין תלות קיים\
+𝛼=5%\
+\
+
+### הנחות המודל
+
+דגימה מקרית ובלתי תלויה של התצפיות\
+
+נעדיף להציג זו בגרף קורלציה בשל ריבוי הקומבינציות
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE,comment="",prompt=FALSE,fig.width=11,fig.height=7}
+
+
+#####Pairs
+p<-mutate(Table_6,'00:00-01:59'=Table_6$`00:00-00:59`+Table_6$`01:00-01:59`,'02:00-03:59'=Table_6$`02:00-02:59`+Table_6$`03:00-03:59`,'04:00-05:59'=Table_6$`04:00-04:59`+Table_6$`05:00-05:59`,'06:00-07:59'=Table_6$`06:00-06:59`+Table_6$`07:00-07:59`,'08:00-09:59'=Table_6$`08:00-08:59`+Table_6$`09:00-09:59`,'10:00-11:59'=Table_6$`10:00-10:59`+Table_6$`11:00-11:59`,'12:00-13:59'=Table_6$`12:00-12:59`+Table_6$`13:00-13:59`,'14:00-15:59'=Table_6$`14:00-14:59`+Table_6$`15:00-15:59`,'16:00-17:59'=Table_6$`16:00-16:59`+Table_6$`17:00-17:59`,'18:00-19:59'=Table_6$`18:00-18:59`+Table_6$`19:00-19:59`,'20:00-21:59'=Table_6$`20:00-20:59`+Table_6$`21:00-21:59`,'22:00-23:59'=Table_6$`22:00-22:59`+Table_6$`23:00-23:59`)[c(-2:-25)]
+ggpairs( 
+  data = p[-1],aes(color="" ),
+  lower = list(continuous = wrap("smooth", alpha = 0.5, color = "blue") 
+  ))+
+  theme_grey(base_size = 9,base_rect_size = 14)+
+  ggtitle("טבלת זוגות להצגת תלות בין טווחי השעות השונים","בין השנים 2003-2022")+
+  theme(plot.title = element_text(hjust = 0.5))+ 
+  theme(plot.subtitle = element_text(hjust = 0.5))+
+  #labs(x="כמות תאונות בטווח שני",y= "כמות תאונות בטווח ראשון")+
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, color = "black"))+
+  theme(axis.text.y = element_text(angle = 45, hjust = 1, color = "black"))
+
+```
+
+### מסקנה מתוך ניתוח סטטיסטי
+
+קיימת תלות בין שעות היממה השונות לכמות התאונות טווח השעות המסוכן ביותר
+ביום הוא בין 16:00-18:00\
+
+## שיפור תשתיות כבישים כאמצעי להפחתת תאונות דרכים VS כדאיות ההשקעה למשק
+
+פרויקט למיקוד: שיפור תשתיות "כביש 31" בשנת 2013\
+מהות השיפור: הפרדת כבישים, תאורה, הרחבת הכביש.\
+עלויות למשק: נוהל פר"ת-לפי עלויות למשק וצער וכאב בהתאמה- להלן העלויות:
+(במיליון ש"ח).\
+
+           הרוג                     6.1             3.3   
+     
+           פצועים קשה מאד           4.03            2.0 
+
+          פצועים בינוני/קל         0.58            0.12  
+         
+
+### סטטיסטיקה תיאורית
+
+בגרף הנוכחי מוצגים סך הקורבנות בדרגות השונות בחלוקה לשני מקטעי זמן
+שווים- לפני פרויקט שיפור התשתיות בכביש ולאחריו:\
+גרף זה אינטראקטיבי בבקשה לחץ לקבלת המידע\
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE,comment="",prompt=FALSE}
+
+
+###############Question_5###############
+Q5<-read_csv("C:\\Users\\nmaayan\\OneDrive - Intel Corporation\\Desktop\\datascience\\project\\סופי גמור\\csv\\9.csv",locale = locale(date_names = "he", encoding = "UTF-8"))
+Q5<-Q5[c(-2:-6,-9:-12,-14:-28)]
+Q5<-rename(Q5,lightly_moderately_injured="קל בינוני",Severly_injured="פצועים קשה",dead="הרוגים",year="שנה")
+Q5<-filter(Q5,year<=2019)
+befor_table<-filter(Q5,year<="2013")
+after_table<-filter(Q5,year>"2013")
+#long
+g1<-melt(befor_table,id.vers=c("year"),measure.vars=c("dead", "Severly_injured","lightly_moderately_injured"),variable.name="type",value.name="count")
+g2<-melt(after_table,id.vers=c("year"),measure.vars=c("dead", "Severly_injured","lightly_moderately_injured"),variable.name="type",value.name="count")
+#####Summary
+befor_table_year<-g1%>%group_by(year,type)%>%summarise(sum_befor=sum(count))
+after_table_year<-g2%>%group_by(year,type)%>%summarise(sum_after=sum(count))
+Q5$time<-char("")
+Q5$time<-replace(Q5$time,Q5$year>"2013","after")
+Q5$time<-replace(Q5$time,Q5$year<="2013","befor")
+all_long<-melt(Q5,id.vers=c("year","time"),measure.vars=c("dead","Severly_injured","lightly_moderately_injured"),variable.name="type",value.name="count")
+all_year<-all_long%>%group_by(time,type)%>%summarise(sum1=sum(count))
+all_wide<-dcast(all_year,time~type,value.var="sum1")
+
+dead_color <- colorRampPalette(c("#eb3349", "#f45c43")) 
+severly_injured_color <- colorRampPalette(c("#56ab2f", "#a8e063")) 
+lightly_moderately_injured_color <- colorRampPalette(c("#ff7e5f", "#feb47b")) 
+
+
+#####barplot-NPV
+dead_color <- colorRampPalette(c("#eb3349", "#f45c43")) 
+severly_injured_color <- colorRampPalette(c("#56ab2f", "#a8e063")) 
+lightly_moderately_injured_color <- colorRampPalette(c("#ff7e5f", "#feb47b")) 
+
+Time_Periods <- c("לפני הפרויקט", "אחרי הפרויקט")
+dead <-c(all_year[4,3]$sum1, all_year[1,3]$sum1)
+severly_injured <- c(all_year[5,3]$sum1, all_year[2,3]$sum1)
+lightly_moderately_injured <- c(all_year[6,3]$sum1, all_year[3,3]$sum1)
+
+text <- c(all_year[1,3]$sum1,  all_year[2,3]$sum1, all_year[3,3]$sum1, all_year[4,3]$sum1, all_year[5,3]$sum1, all_year[6,3]$sum1)
+data <- data.frame(Time_Periods, dead, severly_injured,lightly_moderately_injured)
+
+fig <- plot_ly(data, x = ~Time_Periods, y = ~dead, type = 'bar', name = "הרוג",text = severly_injured,
+               marker = list(color =dead_color(5),
+                             line = list(color = 'black',width = 1)))
+fig <- fig %>% add_trace(y = ~severly_injured, name = "פצוע קשה",text = severly_injured,
+                         marker = list(color =severly_injured_color(5),
+                                       line = list(color = 'black',width = 1)))
+fig <- fig %>% add_trace(y = ~lightly_moderately_injured, name = "פצוע קל-בינוני",text = lightly_moderately_injured,
+                         marker = list(color =lightly_moderately_injured_color(5),
+                                       line = list(color = 'black',width = 1)))
+fig <- fig %>% layout(
+  yaxis = list(title = "קורבנות", titlefont = list(family = 'Arial' ,size = 16, color = 'rgb(107, 107, 107)')),
+  xaxis= list(title = "תקופות", titlefont = list(family = 'Arial', size = 16, color = 'rgb(107, 107, 107)')))
+
+fig
+
+
+```
+
+### כמות הנפגעים לפני ואחרי הפרויקט
+
+מבחן Wilcoxon מדגם מזווגים א-פרמטרי: ביקשנו לבחון האם קיימת ירידה בכמות
+הקורבנות בכביש, כלומר האם כמות הנפגעים גבוהה יותר לפני השיפוץ מאשר
+לאחריו?\
+\
+x- כמות נפגעים מסוג j לפני הפרויקט (2008-2013)\
+y- כמות נפגעים מסוג j לאחר הפרויקט (2014-2019)\
+𝑗=(קל/ בינוני פצוע−3, קשה פצוע−2 , הרוג−1)\
+\
+𝑑𝑖=𝑥𝑖−𝑦𝑖\
+𝛼=0.05\
+\
+$H_{0}$:𝜇𝑑=0\
+$H_{1}$:𝜇𝑑\>0\
+\
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE,comment="",prompt=FALSE}
+
+#####wilcox.test-dead
+#dead
+x<-as.numeric(unlist(select(filter(all_wide,time=="befor"),dead)))
+y<-as.numeric(unlist(select(filter(all_wide,time=="after"),dead)))
+wilcox.test<-wilcox.test(x,y,alternative = "greater")
+if(wilcox.test[["p.value"]]<0.05)
+{
+  print ("Reject H0,The number of deaths decreased after the project")
+}else
+{
+  print ("NOT Reject H0,The number of deaths equal or lower than after the project")
+}
+#Severly_injured
+x<-as.numeric(unlist(select(filter(all_wide,time=="befor"),Severly_injured)))
+y<-as.numeric(unlist(select(filter(all_wide,time=="after"),Severly_injured)))
+wilcox.test<-wilcox.test(x,y,alternative = "greater")
+if(wilcox.test[["p.value"]]<0.05)
+{
+  print ("Reject H0,The number of Severly_injured decreased after the project")
+}else
+{
+  print ("NOT Reject H0,The number of Severly_injured equal or lower than after the project")
+}
+#lightly_moderately_injured
+x<-as.numeric(unlist(select(filter(all_wide,time=="befor"),lightly_moderately_injured)))
+y<-as.numeric(unlist(select(filter(all_wide,time=="after"),lightly_moderately_injured)))
+wilcox.test<-wilcox.test(x,y,alternative = "greater")
+if(wilcox.test[["p.value"]]<0.05)
+{
+  print ("Reject H0,The number of Severly_injured decreased after the project")
+}else
+{
+  print ("NOT Reject H0,The number of Severly_injured equal or lower than after the project")
+}
+#mean befor
+b.w<-dcast(befor_table_year,year~type,value.var="sum_befor")
+m_befor<-c(mean(as.numeric(unlist(select(b.w,dead)))),mean(as.numeric(unlist(select(b.w,Severly_injured)))),
+           mean(as.numeric(unlist(select(b.w,lightly_moderately_injured)))))
+```
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE,comment="",prompt=FALSE,results='hide'}
+
+#####NPV after
+after_NPV<-dcast(after_table_year,year~type,value.var="sum_after")
+after_NPV$dead<-m_befor[1]-after_NPV$dead
+after_NPV$Severly_injured<-m_befor[2]-after_NPV$Severly_injured
+after_NPV$lightly_moderately_injured<-m_befor[3]-after_NPV$lightly_moderately_injured
+after_NPV<-mutate(after_NPV,cost_d=as.numeric(dead*6.1))
+after_NPV<-mutate(after_NPV,cost_s=as.numeric(Severly_injured*4.03))
+after_NPV<-mutate(after_NPV,cost_l=as.numeric(lightly_moderately_injured*0.58))
+after_NPV<-mutate(after_NPV,inflation=c(-0.002,0.01,0.002,0.004,0.008,0.006))
+after_NPV<-mutate(after_NPV,Real_value=as.numeric((cost_d+cost_s+cost_l)))
+for(j in 1:6){k<-1
+for(i in 1:j)
+{
+  k<-k*(1+as.numeric(after_NPV[i,'inflation']))
+}
+after_NPV[j,'Real_value']<-after_NPV[j,'Real_value']/k
+}
+x<-as.numeric(unlist(select(after_NPV,Real_value)))
+x<-x/(1.07)^(1:6)
+after_NPV<-mutate(after_NPV,npv=x)
+NPV(cf0=-1000, cf=after_NPV$Real_value,times=c(1:6),i=.07)
+after_NPV$npv_cl<-numeric(6)
+for(j in 1:6){k<-0
+for(i in 1:j)
+{
+  k<-k+(after_NPV[i,'npv'])
+}
+after_NPV[j,'npv_cl']<-k
+}
+NPV(cf0=-1000, cf=after_NPV$Real_value,times=c(1:6),i=.07)
+
+```
+
+### מסקנה מתוך ניתוח גרפי
+
+לא נרשמה ירידה מובהקת בכמות הנפגעים לאחר פרויקט שיפור התשתיות\
+
+### בחינת כדאיות ההשקעה למשק במונחי חיי אדם
+
+תחילה חישבנו את ממוצע הקורבנות בכל סוג חומרה בנפרד במקטע "לפני השיפור",
+לאחר מכן ביצענו השוואה בין כל שנה שלאחר השיפור לבין הממוצע הכולל בהתאם
+לחומרת הקורבן. את ההפרש המתקבל כפלנו בעלות המתאימה לפי נוהל פר"ת.\
+\
+
+$\frac{CF_{n}}{(1+H_{n})(1+r_{n})^n}$ + ... +
+$\frac{CF_{2}}{(1+H_{2})(1+r_{2})^2}$ +
+$\frac{CF_{1}}{(1+H_{1})(1+r_{1})^1}$ + $I_{0}$ - = NPV\
+\
+
+$I_{0}$ - עלות הפרויקט: 1 מילארד\
+$CF_{מ}$- הכנסה שנתית ∑𝐶𝑗×∆( $X_{j}$− $Y_{j}$)\
+∆- הפרש בין ממוצע נפגעים מסוג j לפני הפרויקט לכמות הרוגים מסוג j בשנה ה-
+n\
+𝐶𝑗- עלות נפגע מסוג j למשק\
+(𝟏+ $H_{1}$)⋯(𝟏+ $H_{n}$- ניקוי אינפלציה מערך נומנאלי לקבלת ערך ריאלי\
+𝑟- ריבית אפקטיבית
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE,comment="",prompt=FALSE,fig.width=9,fig.height=6}
+#### במיליונים
+###########NPV GRAPH percent
+gg<-after_NPV$npv_cl-1000
+gg<-c(-1000,gg)
+names(gg)<-2013:2019
+gg1<-as.data.frame(matrix(c(names(gg),gg),length(gg),2))
+gg1$perc<-(abs(as.numeric(gg1$V2)/10)-100)/100
+gg1$perc<-gg1$perc*-1
+for(i in 1:nrow(gg1))
+{
+if(as.numeric(gg1$perc[i])>0)
+{
+  gg1$stat[i]<-"חיובי"
+}
+else
+{
+  gg1$stat[i]<-"שלילי"
+}
+}
+
+
+###באחוזים
+ggplot(gg1, aes(V1, perc)) +
+  geom_bar(stat = "identity", aes(fill = stat), legend = FALSE) + 
+  geom_text(aes(label = paste(round(perc,4) * 100, "%"),
+                vjust = ifelse(perc >= 0, 0, 1)))+
+  ggtitle("החזר השקעה באחוזים ","בין השנים 2013-2019")+ 
+  theme(plot.title = element_text(hjust = 0.5))+ 
+  theme(plot.subtitle = element_text(hjust = 0.5))+
+  labs(x="שנים",y="אחוז החזר ההשקעה",fill="סטטוס החזר השקעה")+
+  scale_fill_brewer(palette= "Set2")
+
+#### במיליונים
+gg1$V2<-round(as.numeric(gg1$V2),5)
+gg1$zerol<--1000
+ggplot(gg1, aes(V1, V2)) +
+  geom_bar(stat = "identity", aes(fill = V1), legend = FALSE) + 
+  geom_text(aes(label = V2,
+                vjust = -2))+
+  ggtitle("החזר השקעה במיליוני שקלים ","בין השנים 2013-2019")+ 
+  theme(plot.title = element_text(hjust = 0.5))+ 
+  theme(plot.subtitle = element_text(hjust = 0.5))+
+  labs(x="שנים",y="מיליוני שקלים",fill="שנים")+
+  scale_fill_brewer(palette= "Set3",direction = -1)+
+geom_hline(yintercept = -1000,col="red",cex=1)+
+  scale_y_continuous(breaks=seq(-1200, 0, 200), limits=c(-1200,0))
+
+
+
+```
+
+\
+
+ניתן לראות בגרפים כי אכן יש שינוי, לא מובהק במיוחד אך גם ניתן לראות מגמה
+בה הפרוייקט יחזיר את ההשקעה
+
+\
+
+### מסקנה
+
+מתי לראשונה ההשקעה תחזיר את עצמה?\
+ההשקעה תחזיר את עצמה כ 33 וחצי שנה לאחר תחילת הפרוייקט משמע בעוד כ 23
+שנה ההשקעה תחזיר את עצמה\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+
+# סיכום ומסקנות
+
+המסקנות המרכזיות שעולות מהמחקר:\
+מצאנו באופן מובהק כי ישנה השפעה בין כלי הרכב וכגילאי הנוהגים על כמות
+התאונות.\
+1. מצאנו כי רכבים פרטיים הם כלי הרכב המעורב ביותר בתאונות דרכים, ואילו
+כלי התחבורה ציבורית הינם כלי הרכב הבטוחים יותר ביחס לכלי הרכב שנבדקו.\
+2. כמו כן, הראנו שגילאי 25-44 נוטים לעשות את כמות התאונות הגבוהה ביותר
+3. מצאנו כי שעות העומס הינם השעות השכיחות ביותר לתאונות.\
+4. לפי הניתוח הכלכלי נמצא כי אין הבדל מובהק בכמות הנפגעים ולמרות כל זאת,
+הפרויקט שלנו עדיין רווחי בהשוואה לאורך השנים ולכן נסיק כי שיפור הכבישים
+הינו משתלם גם בפן הכלכלי ולא רק בפן המוסרי.\
+ישנו ערך בשוק לערך חיי אדם והוא: VSL- Value of Saving Life
+
+\
+\
+\
+\
+\
+
+# תיקונים במהלך הפרוייקט
+
+## מפגש הנחייה- מס' 1
+
+1.  שימוש במידע גולמי- פנינו ללשכה המרכזית לסטטיסטיקה, ראינו שהחומר
+    הגולמי אינו עונה לדרישותינו החלטנו לקחת את כל הטבלאות לטבלאות
+    גולמיות לפי שנים\
+2.  ניתוח B.D- ביצוע ניתוח ב- R ולא כפי שביצענו בהתחלה ב EXCEL\
+3.  הגדלת טווח השנים שנדרש לבדוק ל 10 שנים אחרונות (2012-2021)\
+4.  מבחנים סטטיסטיים -- ביצוע כלל ההנחות המודל\
+5.  דיוק הנתונים והשאלות הנבדקות: הבנת המשתנה הנבדק, בדיקת קורלציה
+    בהתאם.\
+6.  שאלה 4 -- דיוק הבדיקה במקום חלוקה לשעות יום ושעות לילה, בוצעה בדיקה
+    על כל אחת משעות היממה.\
+7.  שאלה כלכלית -- לבחון את כלל מרכיבי NPV , ובמידת הצורך להחליף שאלה.\
+
+\
+\
+
+## מפגש הנחייה- מס' 2
+
+1.  תיאור הגרפים -- הוספת לייבלים וכותרות יותר ברורים לכל גרף, הגדלת
+    מרווחים.\
+2.  שיפור ושינוי גרף פיזור בשאלה 4\
+3.  תיקון השאלה הכלכלית-לפני השיפור עסקנו בעיקר באם קיים קשר בין תקציב
+    הרלב"ד לבין מס' ההרוגים בתאונות דרכים במונחי תמ"ג ומהו תקציב השנתי
+    האופטימלי.\
+4.  לאחר הבנה שאין לנו מספיק נתונים מדויקים בחרנו להתעמק בפרויקט ספציפי
+    של שיפור תשתיות ולשם כך יצרנו שאלה חדשה ובשבילה מצאנו B.D חדש, ערכנו
+    ניתוח ומבחנים סטטיסטים ובנוסף ערכנו NPV מתאים לפי נוהל פרת.\
+
+\
+\
+\
+\
+
+## R-MarkDown
+
+הבנת כל קובץ ויכולותיו, בהתחלה עשינו קובץ וורד אך הגרפים האינטר אקטיביים
+לא יעבדו שם אלא אם נמיר לתמונה לכן החלטנו לייצא לקובץ HTML\
+\
+ייצוג המידע בצורה סטרילית כך שיוצא רק חלק מהפלטים והבנת השליטה בפלט\
+\
+ייצור תוכן עניינים ע"י הפנייה חכמה\
+\
+סידור הטקסט מימין לשמאל\
+\
+\
+\
+\
+\
+\
+
+# מקורות הנתונים ואופן השגתם
+
+הלשכה המרכזית לסטטיסטיקה:הנתונים לשאלות נלקחו מהלשכה המרכזית לסטטיסטיקה
+באמצעות חיפושים שביצענו במאגר הנתונים הראשי ובמחולל התאונות.\
+\
+נוהל פר"ת: את הנתונים לשאלה הכלכלית לקחנו מנוהל פרת משנת 2013, הפרויקט
+התמקד בשיפור תשתיות כביש 31 שמהות השיפור שהוצגה היא הרחבת כבישים, תאורה,
+הפרדת כבישים.\
+כמו כן, העלויות למשק כפי שמוצגות בנוהל פר"ת.\
+\
+\
+\
+\
+\
+\
+
+# רפלקציה
+
+תחילת הפרויקט התמקד בחשיבה משותפת של כלל חברי הצוות בכדי למצוא שאלת מחקר
+מרכזית. לאחר בחירת שאלת המחקר בוצעה חלוקת עבודה בין כלל חברי הצוות בכדי
+לאסוף נתונים, כל חבר צוות התמקד בחיפוש נתונים עבור שאלה ספציפית.\
+\
+לאחר איסוף הנתונים בהתאם לשאלות בוצע מפגש של כלל חברי הצוות בו כל אחד
+הציג את הנתונים שאסף וכך בנינו את תחילת הפרויקט, הכנו יחד את תוכן המצגת
+הראשונה וחברת הצוות עמית הייתה אחראית על עיצובה של המצגת.\
+ביצענו חלוקת שקופיות בכך שכל חבר צוות יהיה אחראי להעמיק במצגת שאותה הוא
+מציג ולהתכונן בהתאם להצגתה.\
+\
+העבודה בהמשך הפרויקט התחלקה בין חברי הצוות באופן הבא:\
+ניר - מארק-דאון\
+\
+עמית וניר- תחום הגרפים בפרויקט\
+כל הקוד בוצע על ידי עמית בוחבוט וניר מעיין
+יצירת הקוד המשותף עבד בצורה שאחד יצר מבנה ראשוני וכך המשכנו להעביר בינינו לשיפורים וליטושים שהתבצעו על ידי שתינו.\
+\
+תומר - מציאת הנתונים וניתוח השאלה הכלכלית\
+\
+עמית, יובל ולי- היו אחראיות על מציאת הקודים המתאימים לשאלות הסטטיסטיות
+וניתוחן.\
+\
+חשוב לציין שכאשר היה קושי בתחום מסוים כמובן שחברי הצוות האחרים תרמו
+מהידע שלהם בכדי להשיג את המטרה המשותפת.\
+\
+תהליך הפרויקט עסק בעיקר בחיפוש אחר מקורות מידע ומאגרי נתונים מתאימים,
+משימה שלא הייתה תמיד פשוטה וכללה אתגרים רבים, בעבודת צוות ובהתמודדות עם
+עבודה עצמאית שדרשה שיתוף פעולה בין חברי הקבוצה, סיעור מוחות ובהתמודדות
+מול חילוקי דעות שפיתחו בנו מיומנויות בעבודת צוות אשר לא תמיד פשוטה אך
+מלמדת וחשובה מאוד גם להמשך דרכנו.\
+\
+קושי נוסף הוא מספר חברי הקבוצה, לעיתים לא פשוט לעבוד בצוות או לבצע חלוקת
+עבודה בין 5 חברי צוות, ישנם כפי שציינו חילוקי דעות רבים ומגוונים שאמנם
+מפתחים חשיבה ונותנים נקודת מבט אחרת לחברי הצוות, אך גם יכולים להיות מאוד
+מאתגרים. בסופו של דבר צלחנו את אתגר זה והצלחנו לבצע את הפרויקט בהתאם
+לשביעות הרצון של כלל חברי הצוות.\
+\
+הפרויקט תרם לנו בידע סטטיסטי בהיבט המחקרי, פיתח בנו מיומנויות רבות בשפת
+R, מיומנויות בהשגת נתונים ומאגרי מידע בכוחות עצמנו, עבודה עצמאית, חיפוש
+יעיל ונכון בהם והתאמתם לשאלות המחקר.\
+\
+אנו מסמכים את תקופת הפרויקט כתקופה מאתגרת ומעשירה במיוחד.\
+זוהי הייתה הפעם הראשונה בה נחשפנו באופן אקטיבי לתחום התמחות בו נוכל
+לעסוק בעתיד.\
+בנוסף לכך למדנו לעבוד בצוות באופן אינטנסיבי לטובת עמידה במטרה המשותפת אך
+יחד עם זאת לבצע שיתוף פעולה מתוך מקום של אחריות אישית של כל חבר צוות
+להצלחת הפרויקט.\
+\
+נציין כי הערכים שיהוו לנו אבן דרך לפרויקט היו: שותפות, שמירה על סטנדרטים
+גבוהים לביצוע ומוטיבציה גבוהה להצלחה.\
+
+</div>
